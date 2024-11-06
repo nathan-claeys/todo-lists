@@ -87,12 +87,29 @@ export async function updateList(
    for (const key in updatedList) {
      if (key in list) {
        list[key] = updatedList[key]
-   }
-    else {
-      reply.code(400)
-    }
+      }
+      else {
+        reply.code(400)
+      }
     const result = await this.level.db.put(listId.toString(), JSON.stringify(list))
     reply.send({ data: result })
   }
 }
+}
+
+
+export async function addItem(
+  request: FastifyRequest, 
+  reply: FastifyReply
+) {
+ const {id: listId} = request.params as Pick<ITodoList, 'id'>;
+ const item = request.body as Partial<ITodoList>;
+ const list = JSON.parse(await this.level.db.get(listId.toString()))
+ if (list) {
+   for (const key in item) {
+     list[key] = item[key]
+   }
+   const result = await this.level.db.put(listId.toString(), JSON.stringify(list))
+   reply.send({ data: result })
+ }
 }

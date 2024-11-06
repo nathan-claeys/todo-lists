@@ -12,6 +12,7 @@ async function lists(fastify: FastifyInstance) {
   fastify.put('/:id', itemController.updateList)
 
   //TODO implement addItem in controller
+  fastify.post('/:id/items', itemController.addItem)
 }
 
 export default lists
