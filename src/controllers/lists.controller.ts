@@ -102,14 +102,37 @@ export async function addItem(
   request: FastifyRequest, 
   reply: FastifyReply
 ) {
- const {id: listId} = request.params as Pick<ITodoList, 'id'>;
- const item = request.body as Partial<ITodoList>;
- const list = JSON.parse(await this.level.db.get(listId.toString()))
- if (list) {
-   for (const key in item) {
-     list[key] = item[key]
-   }
-   const result = await this.level.db.put(listId.toString(), JSON.stringify(list))
-   reply.send({ data: result })
- }
+  const { id: listId } = request.params as Pick<ITodoList, 'id'>;
+  const item = request.body as Record<string, any>; 
+  const list = JSON.parse(await this.level.db.get(listId.toString()));
+
+  if (list) {
+    // Initialiser la propriété `item` si elle n'existe pas
+    list.item = list.item || {};
+
+    // Ajouter ou mettre à jour les éléments
+    for (const key in item) {
+      list.item[key] = item[key];
+    }
+    await this.level.db.put(listId.toString(), JSON.stringify(list));
+    reply.send({ data: 'Item added successfully' });
+  } else {
+    reply.status(404).send({ error: 'List not found' });
+  }
+}
+
+
+export async function deleteItem(
+  request: FastifyRequest, 
+  reply: FastifyReply
+) {
+  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & { idItem: string };
+  const list = JSON.parse(await this.level.db.get(id.toString()));
+  if (list && list.item) {
+    delete list.item[idItem];
+    await this.level.db.put(id.toString(), JSON.stringify(list));
+    reply.send({ data: 'Item deleted successfully' });
+  } else {
+    reply.status(404).send({ error: 'List or item not found' });
+  }
 }
