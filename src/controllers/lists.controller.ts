@@ -8,14 +8,6 @@ const staticLists: ITodoList[] = [
   }
 ]
 
-//export const listLists = async (
-// request: FastifyRequest, 
-// reply: FastifyReply) => {
-//  Promise.resolve(staticLists)
-//  .then((item) => {
-//	reply.send({ data: item })
-//  })
-//}
 
 export async function listLists(
   request: FastifyRequest, 
@@ -32,14 +24,6 @@ export async function listLists(
 }
 
 
-//export const addList = async (
-//    request: FastifyRequest,
-//    reply: FastifyReply) => {
-//    const newList = request.body as ITodoList;
-//    staticLists.push(newList);
-//    reply.send({ data: newList });
-//    }
-
 export async function addList(
   request: FastifyRequest, 
   reply: FastifyReply
@@ -48,33 +32,8 @@ export async function addList(
  const result = await this.level.db.put(
    list.id.toString(), JSON.stringify(list)
  )
- reply.send({ data: result })
+ reply.send({ data: "List added successfully" })
 }
-
-
-//export const updateList = async (
-//    request: FastifyRequest,
-//    reply: FastifyReply) => {
-//    const {id: listId} = request.params as Pick<ITodoList, 'id'> ;
-//    const updatedList = request.body as Partial<ITodoList>; // can be partial
-//    // find the list to update
-//    const list = staticLists.find((list) => list.id === listId) as ITodoList;
-//    // update the list
-//    if (list) {
-//      for (const key in updatedList) {
-//        if (key in list) {
-//            list.description = updatedList.description as string;
-//        }
-//        else {
-//            reply.code(400); //no value tu update
-//        }
-//        reply.send({ data: list });
-//      }
-//    }
-//    else {
-//        reply.code(404); // no list found
-//    }   
-//}
 
 export async function updateList(
   request: FastifyRequest, 
@@ -92,7 +51,7 @@ export async function updateList(
         reply.code(400)
       }
     const result = await this.level.db.put(listId.toString(), JSON.stringify(list))
-    reply.send({ data: result })
+    reply.send({ data: "List updated successfully" })
   }
 }
 }
@@ -136,3 +95,26 @@ export async function deleteItem(
     reply.status(404).send({ error: 'List or item not found' });
   }
 }
+
+
+export async function updateItem(
+  request: FastifyRequest, 
+  reply: FastifyReply
+) {
+  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & { idItem: string };
+  const updatedItem = request.body as Record<string, any>; 
+  const list = JSON.parse(await this.level.db.get(id.toString()));
+  if (list && list.item) {
+    if (list.item[idItem]) {
+      list.item[idItem] = updatedItem;
+      await this.level.db.put(id.toString(), JSON.stringify(list));
+      reply.send({ data: 'Item updated successfully' });
+    } else {
+      reply.status(404).send({ error: 'Item not found' });
+    }
+  } else {
+    reply.status(404).send({ error: 'List not found' });
+  }
+}
+
+

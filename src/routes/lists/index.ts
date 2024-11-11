@@ -16,6 +16,9 @@ async function lists(fastify: FastifyInstance) {
 
   //TODO implement deleteItem in controller
   fastify.delete('/:id/items/:idItem', itemController.deleteItem)
+
+  //TODO implement updateItem in controller
+  fastify.put('/:id/items/:idItem', itemController.updateItem)
 }
 
 export default lists
