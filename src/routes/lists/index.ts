@@ -1,12 +1,13 @@
 import { FastifyInstance } from 'fastify'
 import * as itemController from '../../controllers/lists.controller'
+import { addListSchema, listListsSchema } from '../../schemas'
 
 async function lists(fastify: FastifyInstance) {
 
-  fastify.get('/', itemController.listLists)
+  fastify.get('/',{ schema: listListsSchema }, itemController.listLists)
 
   // TODO implement addList in controller
-  fastify.post('/', itemController.addList)
+  fastify.post('/',{ schema: addListSchema }, itemController.addList)
 
   //TODO implement updateList in controller
   fastify.put('/:id', itemController.updateList)
