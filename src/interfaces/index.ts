@@ -4,7 +4,7 @@ export interface ITodoList {
   }
 
 export interface ITodoItem {
-    id: string
-    description: string
-    status: string
-  }
+  id: string
+  description: string
+  status: string
+}
