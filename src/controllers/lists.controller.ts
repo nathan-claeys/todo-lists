@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from "fastify"
-import { ITodoList } from "../interfaces"
+import { ITodoList, ITodoItem } from "../interfaces"
 
 const staticLists: ITodoList[] = [
   {
@@ -62,17 +62,16 @@ export async function addItem(
   reply: FastifyReply
 ) {
   const { id: listId } = request.params as Pick<ITodoList, 'id'>;
-  const item = request.body as Record<string, any>; 
+  const item = request.body as ITodoItem; 
   const list = JSON.parse(await this.level.db.get(listId.toString()));
 
   if (list) {
     // Initialiser la propriété `item` si elle n'existe pas
-    list.item = list.item || {};
+    list.item = list.item || [];
 
-    // Ajouter ou mettre à jour les éléments
-    for (const key in item) {
-      list.item[key] = item[key];
-    }
+    // Ajouter l'item à la liste
+    list.item.push(item);
+
     await this.level.db.put(listId.toString(), JSON.stringify(list));
     reply.send({ data: 'Item added successfully' });
   } else {
@@ -85,14 +84,27 @@ export async function deleteItem(
   request: FastifyRequest, 
   reply: FastifyReply
 ) {
-  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & { idItem: string };
+  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & {idItem:string};
   const list = JSON.parse(await this.level.db.get(id.toString()));
   if (list && list.item) {
-    delete list.item[idItem];
+    // Trouver le bon item dans la liste et le supprimer
+    var trouve = false;
+    for (let i = 0; i < list.item.length; i++) {
+      reply.send({ data: list.item[i].id, idItem });
+      if (list.item[i].id === idItem) {
+        list.item.splice(i, 1);
+        trouve = true;
+        break;
+      }
+    }
     await this.level.db.put(id.toString(), JSON.stringify(list));
-    reply.send({ data: 'Item deleted successfully' });
+    if (trouve) {
+      reply.send({ data: 'Item deleted successfully' });
+    } else {
+      reply.status(404).send({ error: 'item not found' });
+    }
   } else {
-    reply.status(404).send({ error: 'List or item not found' });
+    reply.status(404).send({ error: 'List not found' });
   }
 }
 
@@ -101,13 +113,21 @@ export async function updateItem(
   request: FastifyRequest, 
   reply: FastifyReply
 ) {
-  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & { idItem: string };
-  const updatedItem = request.body as Record<string, any>; 
+  const { id, idItem } = request.params as Pick<ITodoList, 'id'> & {idItem:string};
+  const updatedItem = request.body as Partial<ITodoItem>; 
   const list = JSON.parse(await this.level.db.get(id.toString()));
   if (list && list.item) {
-    if (list.item[idItem]) {
-      list.item[idItem] = updatedItem;
-      await this.level.db.put(id.toString(), JSON.stringify(list));
+    // Trouver le bon item dans la liste et le mettre à jour
+    var trouve = false;
+    for (let i = 0; i < list.item.length; i++) {
+      if (list.item[i].id === idItem) {
+        trouve = true;
+        list.item[i] = { ...list.item[i], ...updatedItem };
+        await this.level.db.put(id.toString(), JSON.stringify(list));
+        break;
+      }
+    }
+    if (trouve) {
       reply.send({ data: 'Item updated successfully' });
     } else {
       reply.status(404).send({ error: 'Item not found' });
