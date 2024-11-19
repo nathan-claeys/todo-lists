@@ -1,0 +1,15 @@
+services:
+  todolist:
+    build:
+      context: .
+    ports: 
+      - "3000:3000"
+  todolist-client:
+    build:
+      context: ../todolists-frontend
+    ports:
+      - "3006:3000"
+    depends_on:
+      - todolist
+
+    
