@@ -22,4 +22,5 @@ Run the test cases.
 
 To learn Fastify, check out the [Fastify documentation](https://fastify.dev/docs/latest/).
 
+docker build -t todolist:1.0.0  .
 docker run -p 3001:3000  todolist:1.0.0
